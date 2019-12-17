@@ -1,26 +1,46 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import FileSearch from 'components/FileSearch'
+import FileList from 'components/FileList'
+import { Row, Col } from 'antd'
+import defaultFiles from 'utils/defaultFiles'
+
+import './App.scss'
+import LeftBtnGroup from './components/LeftBtnGroup'
+import TabList from './components/TabList'
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+      <Row>
+        <Col
+          span={6}
+          style={{ borderRight: 'solid 1px #ebedf0', padding: '0 7px' }}
         >
-          Learn React
-        </a>
-      </header>
+          <FileSearch
+            onFileSearch={value => {
+              console.log(value)
+            }}
+          />
+          <FileList
+            files={defaultFiles}
+            onFileClick={id => {
+              console.log(id)
+            }}
+            onFileDelete={id => {
+              console.log(id)
+            }}
+            onSaveEdit={(id, value) => {
+              console.log(id, value)
+            }}
+          />
+          <LeftBtnGroup />
+        </Col>
+        <Col span={18} style={{padding: '0 7px' }}>
+          <TabList files={defaultFiles}/>
+        </Col>
+      </Row>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

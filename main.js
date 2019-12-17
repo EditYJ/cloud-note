@@ -4,8 +4,9 @@ const isDev = require('electron-is-dev')
 let mainWindow
 
 app.on('ready', () => {
+  require('devtron').install()
   mainWindow = new BrowserWindow({
-    width: 1024,
+    width: 1200,
     height: 680,
     webPreferences: {
       nodeIntegration: true
@@ -13,4 +14,5 @@ app.on('ready', () => {
   })
   const urlLocation = isDev ? 'http://localhost:3000' : 'unknow'
   mainWindow.loadURL(urlLocation)
+  mainWindow.webContents.openDevTools()
 })
