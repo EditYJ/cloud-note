@@ -1,0 +1,32 @@
+.tabList {
+  .close-icon {
+    margin-left: 5px;
+    visibility: hidden;
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    color: #5f5f5f;
+  }
+  .unsave-icon {
+    margin-left: 5px;
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    color: #d9534f;
+  }
+  .active {
+    visibility: visible;
+  }
+  .tabPane:hover .close-icon {
+    visibility: visible;
+  }
+  .withUnsaved .close-icon {
+    display: none;
+  }
+  .withUnsaved:hover .close-icon {
+    display: inline-block;
+  }
+  .withUnsaved:hover .unsave-icon {
+    display: none;
+  }
+}

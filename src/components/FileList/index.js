@@ -78,7 +78,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
             <List.Item.Meta
               avatar={
                 <Icon
-                  style={{ fontSize: '24px' }}
+                  className="fileList-icon"
                   type="file-markdown"
                   theme="filled"
                 />
@@ -94,10 +94,22 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
 }
 
 FileList.propTypes = {
-  files: PropTypes.array,
+  files: PropTypes.array.isRequired,
   onFileClick: PropTypes.func,
   onFileDelete: PropTypes.func,
   onSaveEdit: PropTypes.func
+}
+
+FileList.defaultProps = {
+  onFileClick: fileId => {
+    console.log('点击的列表项id为：', fileId)
+  },
+  onFileDelete: fileId => {
+    console.log(`点击了id为 ${fileId} 列表项的删除按钮`)
+  },
+  onSaveEdit: (fileId, value) => {
+    console.log(`保存id为 ${fileId} 列表项的新文件名 ${value}`)
+  }
 }
 
 export default FileList

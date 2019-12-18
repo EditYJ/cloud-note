@@ -26,7 +26,13 @@ const FileSearch = ({ onFileSearch }) => {
 }
 
 FileSearch.propTypes = {
-  onFileSearch: PropTypes.func.isRequired
+  onFileSearch: PropTypes.func
+}
+
+FileSearch.defaultProps = {
+  onFileSearch: value => {
+    console.log('搜索关键字为：', value)
+  }
 }
 
 export default FileSearch

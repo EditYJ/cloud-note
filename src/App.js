@@ -1,14 +1,18 @@
-import React from 'react'
+import React, { useState } from 'react'
 import FileSearch from 'components/FileSearch'
 import FileList from 'components/FileList'
 import { Row, Col } from 'antd'
 import defaultFiles from 'utils/defaultFiles'
+import SimpleMDE from 'react-simplemde-editor'
+import 'easymde/dist/easymde.min.css'
 
 import './App.scss'
 import LeftBtnGroup from './components/LeftBtnGroup'
 import TabList from './components/TabList'
 
 function App() {
+  const [activeId, setActiveId] = useState('1')
+
   return (
     <div className="App">
       <Row>
@@ -35,8 +39,27 @@ function App() {
           />
           <LeftBtnGroup />
         </Col>
-        <Col span={18} style={{padding: '0 7px' }}>
-          <TabList files={defaultFiles}/>
+        <Col span={18} style={{ padding: '0 7px' }}>
+          <TabList
+            activeId={activeId}
+            files={defaultFiles}
+            onTabClick={id => {
+              console.log('Tab: ', id)
+              setActiveId(id)
+            }}
+            onCloseTab={id => {
+              console.log('Close: ', id)
+            }}
+          />
+          <SimpleMDE
+            value={defaultFiles[1].body}
+            onChange={value => {
+              console.log(value)
+            }}
+            options={{
+              minHeight: '600px'
+            }}
+          />
         </Col>
       </Row>
     </div>
