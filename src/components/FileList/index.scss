@@ -1,4 +1,5 @@
 .fileList {
+  margin-top: 7px;
   .fileList-title {
     cursor: pointer;
   }
@@ -7,5 +8,8 @@
   }
   .fileList-icon {
     font-size: 24px;
+  }
+  .ant-list-pagination {
+    margin-top: 10px;
   }
 }

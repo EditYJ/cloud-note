@@ -73,6 +73,13 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
         size="small"
         itemLayout="horizontal"
         dataSource={files}
+        pagination={{
+          onChange: page => {
+            console.log(page);
+          },
+          pageSize: 14,
+          simple: true
+        }}
         renderItem={file => (
           <List.Item actions={actionsButtonGroup(file)}>
             <List.Item.Meta
