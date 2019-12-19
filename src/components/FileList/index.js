@@ -1,8 +1,9 @@
-import { Button, Icon, Input, List } from 'antd'
-import classNames from 'classnames'
+import React, { useState, useEffect } from 'react'
+import { List, Icon, Button, Input } from 'antd'
 import useKeyPress from 'hooks/useKeyPress'
 import PropTypes from 'prop-types'
-import React, { useEffect, useState } from 'react'
+import classNames from 'classnames'
+
 import './index.scss'
 
 const FileList = ({
@@ -78,7 +79,6 @@ const FileList = ({
   const itemTitleContent = file => {
     return file.id === editStatus || file.isNew ? (
       <Input
-        keyCode={file.id}
         value={value}
         size="small"
         onChange={e => {

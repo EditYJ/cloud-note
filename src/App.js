@@ -1,33 +1,29 @@
-import { Col, Row } from 'antd'
-import FileList from 'components/FileList'
-import FileSearch from 'components/FileSearch'
-import 'easymde/dist/easymde.min.css'
 import React, { useState } from 'react'
-import SimpleMDE from 'react-simplemde-editor'
+import FileSearch from 'components/FileSearch'
+import FileList from 'components/FileList'
+import { Row, Col } from 'antd'
 import defaultFiles from 'utils/defaultFiles'
-import { flattenArr, objToArr } from 'utils/helper'
+import SimpleMDE from 'react-simplemde-editor'
+import 'easymde/dist/easymde.min.css'
 import uuidv4 from 'uuid/v4'
+
 import './App.scss'
 import LeftBtnGroup from './components/LeftBtnGroup'
 import TabList from './components/TabList'
 
-
 function App() {
-  const [files, setFiles] = useState(flattenArr(defaultFiles)) // 所有文件
+  const [files, setFiles] = useState(defaultFiles) // 所有文件
   const [activeFileId, setActiveFileId] = useState('') //当前选中的文件
   const [openedFileIds, setOpenedFileIds] = useState([]) // 当前打开的文件
   const [unsavedFileIds, setUnsavedFileIds] = useState([]) // 未保存的文件
   const [searchFileList, setSearchFileList] = useState([]) // 搜索的文件列表
-  const filesArr = objToArr(files)
-  // console.log('files', files)
-  // console.log('filesArr', filesArr)
 
   // 左侧列表显示的文件列表
-  const leftFilesList = searchFileList.length > 0 ? searchFileList : filesArr
-  // 打开的文件列表
-  const openFiles = openedFileIds.map(openId => files[openId])
-  // 当前激活的文件标签
-  const activeFile = files[activeFileId]
+  const leftFilesList = searchFileList.length > 0 ? searchFileList : files
+
+  const openFiles = files.filter(file => openedFileIds.includes(file.id))
+
+  const activeFile = files.find(file => file.id === activeFileId)
 
   const fileClick = fileId => {
     // 设置当前激活的文件
@@ -47,6 +43,7 @@ function App() {
     // 减去关闭的文件id
     const ids = openedFileIds.filter(openedFileId => openedFileId !== fileId)
     setOpenedFileIds(ids)
+
     //设置激活的tab
     if (ids.length > 0) {
       setActiveFileId(ids[0])
@@ -56,9 +53,13 @@ function App() {
   }
 
   const fileChange = (changeFileid, changeContent) => {
-    const newFile = { ...files[changeFileid], body: changeContent }
-    const newFiles = { ...files, [changeFileid]: newFile }
     // 更新文件内容
+    const newFiles = files.map(file => {
+      if (file.id === changeFileid) {
+        file.body = changeContent
+      }
+      return file
+    })
     setFiles(newFiles)
     // 更新未保存id
     if (!unsavedFileIds.includes(changeFileid)) {
@@ -67,16 +68,21 @@ function App() {
   }
 
   const fileDelete = fileId => {
+    const newFiles = files.filter(file => file.id !== fileId)
     const newSearchFiles = searchFileList.filter(file => file.id !== fileId)
-    delete files[fileId]
-    setFiles(files)
+    setFiles(newFiles)
     setSearchFileList(newSearchFiles)
     closeTab(fileId)
   }
 
   const editFileTitle = (fileId, newTitle) => {
-    const newFile = { ...files[fileId], title: newTitle, isNew: false }
-    const newFiles = { ...files, [fileId]: newFile }
+    const newFiles = files.map(file => {
+      if (file.id === fileId) {
+        file.title = newTitle
+        file.isNew = false
+      }
+      return file
+    })
     setFiles(newFiles)
   }
 
@@ -87,19 +93,19 @@ function App() {
 
   // 点击新建按钮
   const newFileBtnClick = () => {
-    if (!filesArr[0].isNew) {
-      const uuid = uuidv4()
-      const newFile = {
+    const uuid = uuidv4()
+    const newFiles = [
+      {
         id: uuid,
         title: '',
         description: '',
         body: '## 请输入需要记录的内容',
         createdAt: new Date().getTime(),
         isNew: true
-      }
-      const newFiles = { ...files, [uuid]: newFile }
-      setFiles(newFiles)
-    }
+      },
+      ...files,
+    ]
+    setFiles(newFiles)
   }
 
   return (
@@ -108,7 +114,6 @@ function App() {
         <Col span={6} className="left-panel">
           <FileSearch onFileSearch={searchFiles} />
           <LeftBtnGroup
-            newFileBtnState={filesArr[0].isNew}
             onNewFileBtnClick={newFileBtnClick}
             className="leftBtnGroup"
           />
