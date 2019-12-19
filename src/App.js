@@ -11,6 +11,9 @@ import './App.scss'
 import LeftBtnGroup from './components/LeftBtnGroup'
 import TabList from './components/TabList'
 
+const fs = window.require('fs')
+console.dir(fs)
+
 function App() {
   const [files, setFiles] = useState(defaultFiles) // 所有文件
   const [activeFileId, setActiveFileId] = useState('') //当前选中的文件
@@ -103,7 +106,7 @@ function App() {
         createdAt: new Date().getTime(),
         isNew: true
       },
-      ...files,
+      ...files
     ]
     setFiles(newFiles)
   }
