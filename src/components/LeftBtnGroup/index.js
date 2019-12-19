@@ -1,15 +1,16 @@
-import React from 'react'
-import { Button, Row, Col } from 'antd'
+import { Button, Col, Row } from 'antd'
+import { ImportIcon, NewFileIcon } from 'components/icons'
 import PropTypes from 'prop-types'
-import { NewFileIcon, ImportIcon } from 'components/icons'
-
+import React from 'react'
 import './index.scss'
 
-const LeftBtnGroup = ({ onNewFileBtnClick, onImportBtnClick }) => {
+
+const LeftBtnGroup = ({newFileBtnState, onNewFileBtnClick, onImportBtnClick }) => {
   return (
     <Row className="leftBtnGroup">
       <Col span={12}>
         <Button
+        disabled={newFileBtnState}
           onClick={e => {
             onNewFileBtnClick(e)
           }}
@@ -25,7 +26,7 @@ const LeftBtnGroup = ({ onNewFileBtnClick, onImportBtnClick }) => {
           onClick={e => {
             onImportBtnClick(e)
           }}
-          type="primary"
+          type="dashed"
           block
           className="importBtn"
         >
@@ -38,7 +39,8 @@ const LeftBtnGroup = ({ onNewFileBtnClick, onImportBtnClick }) => {
 
 LeftBtnGroup.propTypes = {
   onNewFileBtnClick: PropTypes.func,
-  onImportBtnClick: PropTypes.func
+  onImportBtnClick: PropTypes.func,
+  newFileBtnState: PropTypes.bool
 }
 
 LeftBtnGroup.defaultProps = {
@@ -47,7 +49,8 @@ LeftBtnGroup.defaultProps = {
   },
   onImportBtnClick: e => {
     console.log('点击了导入按钮')
-  }
+  },
+  newFileBtnState: false
 }
 
 export default LeftBtnGroup

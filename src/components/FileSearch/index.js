@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
-import { Input, Icon } from 'antd'
+import { Icon, Input } from 'antd'
 import PropTypes from 'prop-types'
-
+import React, { useState } from 'react'
 import './index.scss'
+
 
 const FileSearch = ({ onFileSearch }) => {
   const { Search } = Input
