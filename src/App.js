@@ -114,6 +114,7 @@ function App() {
         <Col span={6} className="left-panel">
           <FileSearch onFileSearch={searchFiles} />
           <LeftBtnGroup
+            newFileBtnState={files[0].isNew}
             onNewFileBtnClick={newFileBtnClick}
             className="leftBtnGroup"
           />
