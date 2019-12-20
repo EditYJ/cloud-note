@@ -10,9 +10,11 @@ import uuidv4 from 'uuid/v4'
 import './App.scss'
 import LeftBtnGroup from './components/LeftBtnGroup'
 import TabList from './components/TabList'
+import fileHelper from 'utils/fileHelper'
 
-const fs = window.require('fs')
-console.dir(fs)
+// 引入node.js相关
+const { join } = window.require('path')
+const { remote } = window.require('electron')
 
 function App() {
   const [files, setFiles] = useState(defaultFiles) // 所有文件
@@ -21,6 +23,8 @@ function App() {
   const [unsavedFileIds, setUnsavedFileIds] = useState([]) // 未保存的文件
   const [searchFileList, setSearchFileList] = useState([]) // 搜索的文件列表
 
+  // 默认保存文档路径
+  const saveLocation = remote.app.getPath('documents')
   // 左侧列表显示的文件列表
   const leftFilesList = searchFileList.length > 0 ? searchFileList : files
 
@@ -78,15 +82,42 @@ function App() {
     closeTab(fileId)
   }
 
-  const editFileTitle = (fileId, newTitle) => {
-    const newFiles = files.map(file => {
+  const editFileTitle = (fileId, newTitle, isNew) => {
+    let editIndex = -1
+    const newFiles = files.map((file, index) => {
+      const newFile = {...file}
       if (file.id === fileId) {
-        file.title = newTitle
-        file.isNew = false
+        newFile.title = newTitle
+        newFile.isNew = false
+        editIndex = index
       }
-      return file
+      return newFile
     })
-    setFiles(newFiles)
+
+    if (isNew) {
+      // 如果是新建
+      fileHelper
+        .writeFile(
+          join(saveLocation, `${newTitle}.md`),
+          newFiles[editIndex].body
+        )
+        .then(() => {
+          setFiles(newFiles)
+        })
+    } else {
+      //如果是更新
+      fileHelper
+        .renameFile(
+          join(saveLocation, `${files[editIndex].title}.md`),
+          join(saveLocation, `${newTitle}.md`)
+        )
+        .then(() => {
+          setFiles(newFiles)
+        })
+        .catch(err => {
+          console.log('err', err)
+        })
+    }
   }
 
   const searchFiles = keyWords => {
@@ -117,7 +148,7 @@ function App() {
         <Col span={6} className="left-panel">
           <FileSearch onFileSearch={searchFiles} />
           <LeftBtnGroup
-            newFileBtnState={files[0].isNew}
+            newFileBtnState={files[0]?.isNew}
             onNewFileBtnClick={newFileBtnClick}
             className="leftBtnGroup"
           />
