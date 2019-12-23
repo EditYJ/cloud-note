@@ -1,23 +1,38 @@
-import React, { useState } from 'react'
-import FileSearch from 'components/FileSearch'
+import { Col, Row } from 'antd'
 import FileList from 'components/FileList'
-import { Row, Col } from 'antd'
-import defaultFiles from 'utils/defaultFiles'
-import SimpleMDE from 'react-simplemde-editor'
+import FileSearch from 'components/FileSearch'
 import 'easymde/dist/easymde.min.css'
+import React, { useState } from 'react'
+import SimpleMDE from 'react-simplemde-editor'
+import fileHelper from 'utils/fileHelper'
 import uuidv4 from 'uuid/v4'
-
 import './App.scss'
 import LeftBtnGroup from './components/LeftBtnGroup'
 import TabList from './components/TabList'
-import fileHelper from 'utils/fileHelper'
 
 // 引入node.js相关
 const { join } = window.require('path')
 const { remote } = window.require('electron')
+const Store = window.require('electron-store')
+
+// 本地持久化
+const fileStore = new Store({ name: 'Files-Data' })
+const saveFilesToStore = files => {
+  const filesStoreArr = files.reduce((result, file) => {
+    const { id, path, title, createdAt } = file
+    result.push({
+      id,
+      path,
+      title,
+      createdAt
+    })
+    return result
+  }, [])
+  fileStore.set('files', filesStoreArr)
+}
 
 function App() {
-  const [files, setFiles] = useState(defaultFiles) // 所有文件
+  const [files, setFiles] = useState(fileStore.get('files') || []) // 所有文件
   const [activeFileId, setActiveFileId] = useState('') //当前选中的文件
   const [openedFileIds, setOpenedFileIds] = useState([]) // 当前打开的文件
   const [unsavedFileIds, setUnsavedFileIds] = useState([]) // 未保存的文件
@@ -33,6 +48,22 @@ function App() {
   const activeFile = files.find(file => file.id === activeFileId)
 
   const fileClick = fileId => {
+    let clickIndex = 0
+    const currentFile = files.find(file => file.id === fileId)
+    const filesChange = files.filter((file, index) => {
+      const T = file.id === fileId
+      if (T) {
+        clickIndex = index
+      }
+      return !T
+    })
+    if (!currentFile.isLoaded) {
+      fileHelper.readFile(join(currentFile.path)).then(val => {
+        const newFile = { ...currentFile, body: val, isLoaded: true }
+        filesChange.splice(clickIndex, 0, newFile)
+        setFiles(filesChange)
+      })
+    }
     // 设置当前激活的文件
     setActiveFileId(fileId)
     // 存入打开的文件数组
@@ -74,27 +105,51 @@ function App() {
     }
   }
 
+  // 删除文件
   const fileDelete = fileId => {
+    const deleteFile = files.find(file => file.id === fileId)
+    const deleteFileTitle = deleteFile.title
     const newFiles = files.filter(file => file.id !== fileId)
     const newSearchFiles = searchFileList.filter(file => file.id !== fileId)
-    setFiles(newFiles)
-    setSearchFileList(newSearchFiles)
-    closeTab(fileId)
+    if (deleteFile.isNew) {
+      setFiles(newFiles)
+      setSearchFileList(newSearchFiles)
+    } else {
+      fileHelper
+        .deleteFile(join(saveLocation, `${deleteFileTitle}.md`))
+        .then(() => {
+          console.log(`${deleteFileTitle}.md文件删除成功！`)
+          saveFilesToStore(newFiles)
+          setFiles(newFiles)
+          setSearchFileList(newSearchFiles)
+          closeTab(fileId)
+        })
+    }
   }
 
   const editFileTitle = (fileId, newTitle, isNew) => {
+    let isExist = false
     let editIndex = -1
+    const newPath = join(saveLocation, `${newTitle}.md`)
     const newFiles = files.map((file, index) => {
-      const newFile = {...file}
+      const newFile = { ...file }
       if (file.id === fileId) {
         newFile.title = newTitle
         newFile.isNew = false
+        newFile.path = newPath
         editIndex = index
       }
       return newFile
     })
 
-    if (isNew) {
+    files.forEach(file => {
+      if (file.title.trim() === newTitle.trim()) {
+        isExist = true
+        console.log('已存在的文件名')
+      }
+    })
+
+    if (isNew && !isExist) {
       // 如果是新建
       fileHelper
         .writeFile(
@@ -102,9 +157,13 @@ function App() {
           newFiles[editIndex].body
         )
         .then(() => {
+          saveFilesToStore(newFiles)
           setFiles(newFiles)
         })
-    } else {
+        .catch(err => {
+          console.log('err', err)
+        })
+    } else if (!isExist) {
       //如果是更新
       fileHelper
         .renameFile(
@@ -112,6 +171,7 @@ function App() {
           join(saveLocation, `${newTitle}.md`)
         )
         .then(() => {
+          saveFilesToStore(newFiles)
           setFiles(newFiles)
         })
         .catch(err => {
@@ -142,6 +202,33 @@ function App() {
     setFiles(newFiles)
   }
 
+  // 保存按钮
+  const saveEditText = editor => {
+    console.log('修改前文件内容：', editor.options.initialValue)
+    console.log('当前编辑框内容：', activeFile && activeFile.body)
+    // const initContent = editor.options.initialValue
+    const tempContent = activeFile && activeFile.body
+
+    fileHelper
+      .writeFile(join(saveLocation, `${activeFile.title}.md`), tempContent)
+      .then(() => {
+        const newUnsavedFileIds = unsavedFileIds.filter(id => {
+          return id !== activeFile.id
+        })
+        setUnsavedFileIds(newUnsavedFileIds)
+        console.log('保存成功！')
+      })
+  }
+
+  const importBtnClick = () => {
+    remote.dialog.showOpenDialog({
+      title: '选择 MarkDown 文件',
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'MarkDown Files', extensions: ['md', 'MD'] }]
+    }).then(filePaths=>{
+      console.log(filePaths)
+    })
+  }
   return (
     <div className="App">
       <Row>
@@ -150,6 +237,7 @@ function App() {
           <LeftBtnGroup
             newFileBtnState={files[0]?.isNew}
             onNewFileBtnClick={newFileBtnClick}
+            onImportBtnClick={importBtnClick}
             className="leftBtnGroup"
           />
 
@@ -178,10 +266,37 @@ function App() {
                 key={activeFile && activeFile.id}
                 value={activeFile && activeFile.body}
                 onChange={value => {
+                  console.log('SimpleMDE-onChange', value)
                   fileChange(activeFile.id, value)
                 }}
                 options={{
-                  minHeight: '600px'
+                  minHeight: '600px',
+                  toolbar: [
+                    'undo',
+                    'redo',
+                    {
+                      name: 'save',
+                      action: saveEditText,
+                      className: 'fa fa-save',
+                      title: '保存'
+                    },
+                    '|',
+                    'bold',
+                    'italic',
+                    'heading',
+                    '|',
+                    'code',
+                    'quote',
+                    'unordered-list',
+                    'ordered-list',
+                    '|',
+                    'link',
+                    'image',
+                    '|',
+                    'preview',
+                    'side-by-side',
+                    'fullscreen'
+                  ]
                 }}
               />
             </>
